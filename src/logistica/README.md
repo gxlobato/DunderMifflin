@@ -35,10 +35,12 @@ src/logistica/
 ├── distancias.py         # calcula_distancias, calcula_distancias_clientes
 ├── roteirizacao.py        # atribui_armazem, calcular_melhor_rota
 ├── previsao.py             # calcular_horarios_estimados, sinalizar_risco_atraso
-└── main.py                 # pipeline de execução dessa etapa (com cache em Parquet)
+└── main.py                 # orquestra as funções acima (lógica pura, sem gerar arquivos)
 ```
 
 Depende de `src/shared/`, onde ficam as entidades centrais (armazéns, clientes, produtos, funcionários, vendas), o wrapper genérico de chamadas de API (`api_client.py`) e as funções de persistência em Parquet (`storage.py`), reaproveitáveis pelas demais áreas do negócio no futuro.
+
+> **Scripts vs. notebooks:** os arquivos em `src/` contêm apenas a lógica (funções puras de geração, cálculo e roteirização) — nenhum deles gera arquivo Parquet por conta própria. A geração e persistência dos dados (chamadas a `carregar_ou_gerar`/`salvar_parquet`, apontando para os Volumes) acontece nos **notebooks** do Databricks, que importam essas funções e orquestram a execução. Isso mantém `src/` testável e reutilizável independente de onde os dados são salvos.
 
 ### Persistência dos dados
 
@@ -48,6 +50,8 @@ Os dados são cacheados em Parquet (hoje: Volumes do Unity Catalog no Databricks
 - **`source`** — entidades de negócio geradas, reutilizáveis por qualquer área futura (clientes, produtos, funcionários...).
 - **`cache`** — resultado caro de obter via API, sem valor analítico isolado (matriz de distâncias entre clientes).
 - **`logistica`** — fatos exclusivos dessa etapa (entrega, rotas otimizadas).
+
+Essa persistência é orquestrada pelo **notebook** de execução (não pelos arquivos em `src/`), que importa as funções deste módulo e as combina com `carregar_ou_gerar()`/`salvar_parquet()`, apontando para os caminhos dos Volumes.
 
 Detalhamento completo dessa divisão no [CHANGELOG](CHANGELOG.md#persistência-dos-dados-parquet).
 
