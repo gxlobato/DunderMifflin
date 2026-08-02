@@ -26,7 +26,7 @@ O projeto é dividido pelas áreas de negócio de uma empresa. Cada uma tem seu 
 
 A primeira etapa construída. Cobre a geração de armazéns e clientes, o cálculo de distâncias e tempos de viagem reais, a atribuição do armazém mais próximo a cada cliente, a estimativa de prazo de entrega e a roteirização otimizada das entregas.
 
-📄 Detalhamento completo (lógicas aplicadas, escolhas técnicas, bugs encontrados e próximos passos): [`src/logistica/README.md`](src/logistica/README.md)
+📄 Resumo técnico: [`src/logistica/README.md`](src/logistica/README.md) — histórico detalhado de decisões e bugs resolvidos: [`src/logistica/CHANGELOG.md`](src/logistica/CHANGELOG.md)
 
 ---
 
@@ -64,35 +64,45 @@ dunder-mifflin/
 │   │   ├── __init__.py
 │   │   ├── municipios.py            # carrega_municipios, carrega_lat_long, buscar_lat_long
 │   │   ├── entidades.py             # montar_armazens, montar_produtos, montar_clientes, monta_funcionarios
-│   │   └── api_client.py            # wrapper genérico pra chamadas de API externa (ORS, IBGE)
+│   │   ├── api_client.py            # wrapper genérico pra chamadas de API externa (ORS, IBGE)
+│   │   └── storage.py               # cache genérico em Parquet (salvar/carregar DataFrames)
 │   │
 │   ├── logistica/                   # etapa implementada
 │   │   ├── __init__.py
 │   │   ├── distancias.py            # calcula_distancias, calcula_distancias_clientes
 │   │   ├── roteirizacao.py          # atribui_armazem, calcular_melhor_rota
-│   │   └── main.py                  # pipeline de execução dessa etapa
+│   │   ├── previsao.py              # calcular_horarios_estimados, sinalizar_risco_atraso | a implementar
+│   │   └── main.py                  # orquestra as funções da etapa (lógica pura, sem gerar arquivos)
 │   │
 │   ├── vendas/                      # a implementar — mesmo padrão de logistica/
 │   ├── qualidade/                   # a implementar
 │   ├── rh/                          # a implementar
 │   └── contabilidade/               # a implementar
 │
+├── data/                            # dados gerados/cacheados em Parquet — hoje persistidos em Volumes
+│   │                                # do Databricks; ver src/logistica/README.md para detalhes
+│   │                                # das 4 camadas (raw/source/cache/logistica)
+│   ├── raw/
+│   └── logistica/
+│
 ├── tests/
-│   ├── test_logistica.py
+│   ├── test_logistica.py            # a implementar
 │   └── ...
 │
-└── notebooks/                       # exploração/experimentação (Databricks exports, etc.)
-    └── logistica_exploracao.ipynb
+└── notebooks/                       # execução real no Databricks — só aqui os dados são
+    ├── 0. Dunder Mifflin.ipynb   # de fato gerados e persistidos em Parquet (nos Volumes)
+    └── 1. Analises.ipynb          # a implementar
 ```
 
 **Por que essa divisão:**
 
 - **`shared/`** evita duplicar código entre áreas. Clientes e funcionários, por exemplo, não são exclusivos da logística — vendas e contabilidade também vão precisar deles, então centralizar evita reimplementação.
 - **Uma pasta por área de negócio** (`logistica/`, `vendas/`, etc.) espelha a divisão por etapas deste README — cada módulo cresce de forma isolada, sem bagunçar o que já existe.
-- **Um `main.py` por módulo**, em vez de um único arquivo geral na raiz — cada área terá seu próprio pipeline de execução. Um `main.py` na raiz do projeto pode futuramente orquestrar todos os módulos juntos.
+- **Scripts contêm lógica, notebooks geram dados.** Os arquivos em `src/` (incluindo os `main.py` de cada módulo) só definem funções — geração, cálculo, roteirização — sem produzir nenhum arquivo por conta própria. É o **notebook** de execução que importa essas funções e as combina com a camada de persistência (`carregar_ou_gerar`/`salvar_parquet`), gerando de fato os Parquet nos Volumes. Isso mantém `src/` testável e independente de onde os dados acabam sendo salvos.
 - **`.env.example`** documenta as variáveis de ambiente necessárias (ex: `ORS_API_KEY=`) sem expor nenhuma chave real — importante já que chaves de API sensíveis apareceram acidentalmente em versões anteriores do projeto.
 - **`tests/`** antecipa o item de testes automatizados já previsto no roadmap da logística.
 - **Um README por módulo.** Cada pasta de área de negócio (`logistica/`, e futuramente `vendas/`, `qualidade/`, `rh/`, `contabilidade/`) tem seu próprio `README.md` com o detalhamento técnico daquela etapa — lógicas aplicadas, escolhas de design, bugs encontrados e próximos passos. Este README na raiz mantém só um resumo de cada etapa e um link para o detalhamento.
+- **`data/` separado de `src/`.** Dados gerados e resultados calculados (Parquet) ficam fora do código-fonte, organizados em camadas por propósito (dado bruto, entidade compartilhada, cache técnico, fato exclusivo de uma etapa — ver detalhamento em `src/logistica/README.md`), para evitar reprocessar tudo — e recalcular distâncias via API — a cada execução. Hoje persistido em Volumes do Unity Catalog (Databricks); não é versionado no Git, já que é inteiramente reproduzível a partir do código.
 
 ---
 
