@@ -24,9 +24,9 @@ O projeto é dividido pelas áreas de negócio de uma empresa. Cada uma tem seu 
 
 ### 📦 Logística — *implementado*
 
-A primeira etapa construída. Cobre a geração de armazéns e clientes, o cálculo de distâncias e tempos de viagem reais, a atribuição do armazém mais próximo a cada cliente, a estimativa de prazo de entrega e a roteirização otimizada das entregas.
+A primeira etapa construída. Cobre a geração de armazéns (5, após análise de cobertura regional) e clientes, o cálculo de distâncias e tempos de viagem reais, a atribuição do armazém mais próximo a cada cliente, a estimativa de prazo de entrega e a roteirização otimizada das entregas.
 
-📄 Resumo técnico: [`src/logistica/README.md`](src/logistica/README.md) — histórico detalhado de decisões e bugs resolvidos: [`src/logistica/CHANGELOG.md`](src/logistica/CHANGELOG.md)
+📄 Resumo técnico: [`src/logistica/README.md`](src/logistica/README.md) — histórico detalhado de decisões e bugs resolvidos: [`src/logistica/CHANGELOG.md`](src/logistica/CHANGELOG.md) — análise que definiu o 5º armazém: [`exploracao/cenarios_centro_oeste.md`](exploracao/cenarios_centro_oeste.md)
 
 ---
 
@@ -71,7 +71,7 @@ dunder-mifflin/
 │   │   ├── __init__.py
 │   │   ├── distancias.py            # calcula_distancias, calcula_distancias_clientes
 │   │   ├── roteirizacao.py          # atribui_armazem, calcular_melhor_rota
-│   │   ├── previsao.py              # calcular_horarios_estimados, sinalizar_risco_atraso | a implementar
+│   │   ├── previsao.py              # calcular_horarios_estimados, sinalizar_risco_atraso
 │   │   └── main.py                  # orquestra as funções da etapa (lógica pura, sem gerar arquivos)
 │   │
 │   ├── vendas/                      # a implementar — mesmo padrão de logistica/
@@ -86,12 +86,14 @@ dunder-mifflin/
 │   └── logistica/
 │
 ├── tests/
-│   ├── test_logistica.py            # a implementar
+│   ├── test_logistica.py
 │   └── ...
 │
-└── notebooks/                       # execução real no Databricks — só aqui os dados são
-    ├── 0. Dunder Mifflin.ipynb   # de fato gerados e persistidos em Parquet (nos Volumes)
-    └── 1. Analises.ipynb          # a implementar
+├── notebooks/                        # execução real no Databricks — só aqui os dados são
+│   └── 1. Analysis - Rotas.ipynb      # de fato gerados e persistidos em Parquet (nos Volumes)
+│
+└── exploracao/                       # análises exploratórias pré-implementação, ainda sem
+    └── 1. Exploração - Rotas.ipynb      # código definitivo (ex: comparação de cenários)
 ```
 
 **Por que essa divisão:**
@@ -103,6 +105,7 @@ dunder-mifflin/
 - **`tests/`** antecipa o item de testes automatizados já previsto no roadmap da logística.
 - **Um README por módulo.** Cada pasta de área de negócio (`logistica/`, e futuramente `vendas/`, `qualidade/`, `rh/`, `contabilidade/`) tem seu próprio `README.md` com o detalhamento técnico daquela etapa — lógicas aplicadas, escolhas de design, bugs encontrados e próximos passos. Este README na raiz mantém só um resumo de cada etapa e um link para o detalhamento.
 - **`data/` separado de `src/`.** Dados gerados e resultados calculados (Parquet) ficam fora do código-fonte, organizados em camadas por propósito (dado bruto, entidade compartilhada, cache técnico, fato exclusivo de uma etapa — ver detalhamento em `src/logistica/README.md`), para evitar reprocessar tudo — e recalcular distâncias via API — a cada execução. Hoje persistido em Volumes do Unity Catalog (Databricks); não é versionado no Git, já que é inteiramente reproduzível a partir do código.
+- **`exploracao/` separado de `notebooks/`.** `notebooks/` guarda a execução real que gera e persiste os dados; `exploracao/` guarda análises pontuais que orientam uma decisão antes dela virar código definitivo (ex: comparação de cenários para decidir onde abrir um novo armazém). Isso deixa rastreável, no próprio repositório, o raciocínio por trás de mudanças estruturais no código — não só o resultado final.
 
 ---
 

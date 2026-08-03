@@ -5,6 +5,7 @@ Exclusivo da etapa de Logística.
 """
 
 import pandas as pd
+import requests
 
 from src.shared.api_client import post_json
 

@@ -1,14 +1,14 @@
 # 📦 Logística
 
-Primeira etapa de negócio implementada no projeto **Dunder Mifflin**. Cobre a geração de armazéns e clientes, o cálculo de distâncias/tempos de viagem reais, a atribuição do armazém mais próximo a cada cliente (respeitando uma regra de cobertura regional) e a roteirização otimizada das entregas, com estimativa de horário e sinalização de risco de atraso.
+Primeira etapa de negócio implementada no projeto **Dunder Mifflin**. Cobre a geração de armazéns e clientes, o cálculo de distâncias/tempos de viagem reais, a atribuição do armazém mais próximo a cada cliente (respeitando uma regra de cobertura regional, com 5 armazéns) e a roteirização otimizada das entregas, com estimativa de horário e sinalização de risco de atraso.
 
-> Para o contexto geral do projeto (a homenagem a *The Office*, a visão de longo prazo com as demais áreas do negócio), veja o [README na raiz](../../README.md). Para o histórico detalhado de decisões e bugs resolvidos ao longo do desenvolvimento, veja o [CHANGELOG](CHANGELOG.md).
+> Para o contexto geral do projeto (a homenagem a *The Office*, a visão de longo prazo com as demais áreas do negócio), veja o [README na raiz](../../README.md). Para o histórico detalhado de decisões e bugs resolvidos ao longo do desenvolvimento, veja o [CHANGELOG](CHANGELOG.md). Para a análise que levou à adição do 5º armazém, veja [`exploracao/cenarios_centro_oeste.md`](../../exploracao/cenarios_centro_oeste.md).
 
 ---
 
 ## O que foi feito
 
-1. Geração de uma base sintética de armazéns, clientes, produtos, funcionários e vendas.
+1. Geração de uma base sintética de armazéns (5, após [análise de cobertura regional](../../exploracao/cenarios_centro_oeste.md)), clientes, produtos, funcionários e vendas.
 2. Atribuição do armazém mais próximo a cada cliente, respeitando uma **regra de cobertura regional** (nem todo armazém pode atender qualquer região do país) — distância real calculada via OpenRouteService.
 3. Estimativa de **prazo de entrega** por faixa de distância, e cálculo do **horário estimado de saída/chegada** em cada parada, sinalizando risco de atraso frente ao prazo prometido.
 4. **Roteirização otimizada** por armazém + data de saída, usando a heurística do vizinho mais próximo.
@@ -71,7 +71,7 @@ Justificativas detalhadas de cada escolha no [CHANGELOG](CHANGELOG.md#escolhas-t
 
 ## Problemas encontrados pelo caminho
 
-Bugs e ajustes recorrentes ao integrar múltiplas APIs externas: parâmetros de coordenadas invertidos, ambiguidade de nomes de cidade, rate limit da API, migração para fora do ambiente Databricks (`dbutils`), clientes duplicados quebrando a rota, e limite de pares por chamada ao escalar o número de clientes.
+Bugs e ajustes recorrentes ao integrar múltiplas APIs externas: parâmetros de coordenadas invertidos, ambiguidade de nomes de cidade, rate limit da API, migração para fora do ambiente Databricks (`dbutils`), clientes duplicados quebrando a rota, e limite de pares por chamada ao escalar o número de clientes. Também identificada, via análise pós-implementação, uma regra de cobertura regional que gerava rotas com duração inviável — resolvida com a adição de um 5º armazém (ver [investigação completa](CHANGELOG.md#investigação-rotas-com-duração-inviável-e-novo-armazém-em-goiânia)).
 
 Descrição completa de cada bug e como foi resolvido no [CHANGELOG](CHANGELOG.md#problemas-encontrados-pelo-caminho).
 
@@ -79,6 +79,7 @@ Descrição completa de cada bug e como foi resolvido no [CHANGELOG](CHANGELOG.m
 
 ## Próximos passos
 
+- [ ] Cobertura da região Norte — cliente remoto (~4.100 km de Belém) identificado na mesma análise que originou o 5º armazém; segue sem solução.
 - [ ] `FORCAR_ATUALIZACAO` por camada, não global.
 - [ ] Horário de saída configurável por armazém.
 - [ ] Cobertura regional mais flexível (configurável, não hardcoded).
