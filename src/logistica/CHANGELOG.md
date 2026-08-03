@@ -119,8 +119,30 @@ O desenvolvimento dessa etapa passou por bastante debugging — parte natural de
 
 ---
 
+## Investigação: rotas com duração inviável e novo armazém em Goiânia
+
+Uma análise de rotas (`notebooks/1. Analysis - Rotas.ipynb`) identificou entregas com duração total fisicamente impossível para um único dia — algumas rotas somavam mais de 80h de viagem. A investigação seguiu este caminho:
+
+1. **Sintoma:** query agregando `SUM(duracao_percorrida_min)` por armazém/data revelou centenas de rotas acima de 10h (jornada de trabalho de referência).
+2. **Primeira hipótese descartada:** volume de entregas por rota. Rotas com **1 única entrega** já apresentavam 30,6% de inviabilidade — o problema não era acúmulo de paradas, era a distância de trechos individuais.
+3. **Causa raiz confirmada:** a regra de cobertura regional (`REGIOES_PERMITIDAS`) permitia que clientes do Centro-Oeste fossem atendidos pelo armazém de Recife (Nordeste) — distâncias de milhares de km.
+4. **Comparação de cenários** (`exploracao/cenarios_centro_oeste.md`), calculando a distância real de cada cliente até armazéns candidatos (os 4 atuais + Goiânia):
+
+   | Cenário | Distância média (km) | Clientes acima de 800 km |
+   |---|---|---|
+   | A — corrige a regra (CO → Sudeste+Sul), sem novo armazém | 817,7 | 17 |
+   | B — realoca Recife → Goiânia | 999,2 | 21 |
+   | **C — mantém os 4 armazéns e adiciona Goiânia** | **719,4** | **12** |
+
+5. **Decisão:** Cenário C. Resultou em `montar_armazens()` ganhando um 5º armazém (Goiânia, código A5) e `REGIOES_PERMITIDAS` sendo ajustado para que o Centro-Oeste passe a ser atendido por Centro-Oeste/Sudeste, em vez de Nordeste.
+
+**Pendência identificada, fora do escopo dessa mudança:** em todos os 3 cenários testados, um cliente da região Norte (atendido por Belém) manteve distância de ~4.100 km, já que nenhum cenário alterava a cobertura do Norte. Sugere que a região Norte tem um problema de cobertura equivalente ao do Centro-Oeste, ainda não investigado.
+
+---
+
 ## Próximos passos
 
+- [ ] **Cobertura da região Norte.** Identificado durante a investigação do Centro-Oeste: um cliente do Norte permanece a ~4.100 km do armazém de Belém em todos os cenários testados. Avaliar se precisa de um segundo armazém na região (ex: Manaus) ou de uma regra de SLA/frete diferenciada para clientes muito remotos.
 - [x] ~~Cálculo de tempo de entrega.~~ A API já retorna a duração de viagem (`duracao_min`/`duracao_percorrida_min`) para cada trecho, e o prazo de entrega por cliente é estimado por faixa de distância.
 - [x] ~~Horário estimado de chegada por parada.~~ `calcular_horarios_estimados()` soma a duração acumulada da rota + tempo de parada por entrega a partir de um horário de saída fixo, e `sinalizar_risco_atraso()` compara isso com o prazo prometido.
 - [x] ~~Persistência dos dados gerados.~~ Todas as entidades e o resultado final da rota são cacheados em Parquet, organizados em 4 camadas (`raw`/`source`/`cache`/`logistica`) nos Volumes do Databricks, evitando reprocessar tudo (e recalcular distâncias via API) a cada execução.

@@ -19,11 +19,11 @@ def atribui_armazem(df_armazem, df_clientes, api_key):
     medio = 800
 
     REGIOES_PERMITIDAS = {
-    'Norte': ['Norte', 'Nordeste'],
-    'Nordeste': ['Nordeste', 'Norte'],
-    'Centro-Oeste': ['Sudeste', 'Nordeste'],
-    'Sudeste': ['Sudeste', 'Sul'],
-    'Sul': ['Sul', 'Sudeste'],
+        'Norte': ['Norte', 'Nordeste'],
+        'Nordeste': ['Nordeste', 'Norte'],
+        'Centro-Oeste': ['Centro-Oeste', 'Sudeste'],
+        'Sudeste': ['Sudeste', 'Sul'],
+        'Sul': ['Sul', 'Sudeste'],
     }
 
     df_distancias = calcula_distancias(df_armazem, df_clientes, api_key)

@@ -13,8 +13,9 @@ def montar_armazens(df_municipios, df_lat_long):
     internamente) para evitar repetir chamadas de API desnecessárias
     quando montar_clientes() também precisar dos mesmos dados.
     """
-    armazem_cidades = ['São Paulo', 'Curitiba', 'Recife', 'Belém']
-    armazem_codigo = ['A1', 'A2', 'A3', 'A4']
+    #Adição do armazém de Goiania - 03/08/26
+    armazem_cidades = ['São Paulo', 'Curitiba', 'Recife', 'Belém','Goiânia']
+    armazem_codigo = ['A1', 'A2', 'A3', 'A4','A5']
 
     armazens = []
 

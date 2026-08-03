@@ -59,21 +59,16 @@ def carrega_lat_long():
     return df[['nome', 'codigo_uf', 'latitude', 'longitude']]
 
 
-def buscar_lat_long(df_lat_long, nome_cidade, codigo_uf):
+def buscar_lat_long(df_lat_long, codigo_ibge):
     """
-    Retorna (latitude, longitude) de uma cidade específica.
-
-    Filtra por nome E código da UF ao mesmo tempo — filtrar só por nome
-    é arriscado, pois existem cidades homônimas em estados diferentes
-    (ex: "Belém" existe no PA, MG e AL).
+    Retorna (latitude, longitude) de uma cidade específica, buscando
+    pelo código IBGE — mais robusto que buscar por nome, já que evita
+    divergências de acentuação/grafia entre fontes de dados diferentes
+    (ex: API do IBGE vs CSV do kelvins/municipios-brasileiros).
     """
-    linha = df_lat_long[
-        (df_lat_long['nome'] == nome_cidade) & (df_lat_long['codigo_uf'] == codigo_uf)
-    ].head(1)
+    linha = df_lat_long[df_lat_long['codigo_ibge'] == codigo_ibge].head(1)
 
-    # levanta um erro claro em vez de deixar quebrar mais adiante com
-    # um IndexError genérico
     if linha.empty:
-        raise ValueError(f"Cidade não encontrada em df_lat_long: {nome_cidade} / UF {codigo_uf}")
+        raise ValueError(f"Código IBGE não encontrado em df_lat_long: {codigo_ibge}")
 
     return linha['latitude'].values[0], linha['longitude'].values[0]
