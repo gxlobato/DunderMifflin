@@ -16,7 +16,7 @@ from src.shared import (
     montar_produtos,
     montar_clientes,
     monta_funcionarios,
-    montar_vendas,
+    
 )
 
 from src.logistica import (
@@ -25,6 +25,7 @@ from src.logistica import (
     calcula_distancias_clientes
 )
 
+from src.vendas import montar_vendas
 # ---------------------------------------------------------------------
 # Configuração
 # ---------------------------------------------------------------------

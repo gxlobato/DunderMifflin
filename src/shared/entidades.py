@@ -44,26 +44,26 @@ def montar_armazens(df_municipios, df_lat_long):
     return pd.DataFrame(armazens)
 
 
+#Adição da coluna de custo de compra do produto
 def montar_produtos():
     """Catálogo fixo de produtos (papelaria) com peso e valor unitário."""
 
     produtos = [
-        [1, 'Papel Kraft', 3, 80],
-        [2, 'Papel-Cartão', 20, 250],
-        [3, 'Papel Supremo', 20, 220],
-        [4, 'Papel Sulfite', 23, 300],
-        [5, 'Papel Couché', 6, 200],
-        [6, 'Papel Pólen', 13, 220],
-        [7, 'Papel Color Plus', 2.8, 100],
-        [8, 'Papel Vegetal', 2, 80],
-        [9, 'Papel Fotográfico', 1.2, 40],
+        [1, 'Papel Kraft', 3,60,80],
+        [2, 'Papel-Cartão', 20,200,250],
+        [3, 'Papel Supremo', 20,180,220],
+        [4, 'Papel Sulfite', 23,200,300],
+        [5, 'Papel Couché', 6,120,200],
+        [6, 'Papel Pólen', 13,100,220],
+        [7, 'Papel Color Plus', 2.8,90,100],
+        [8, 'Papel Vegetal', 2,75,80],
+        [9, 'Papel Fotográfico', 1.2,35,40],
     ]
 
     return pd.DataFrame(
         produtos,
-        columns=['id', 'produto', 'peso', 'valor_unitario']
+        columns=['id', 'produto', 'peso', 'valor_custo','valor_unitario']
     )
-
 
 def montar_clientes(df_municipios, df_lat_long, quantidade=50):
     """
@@ -97,31 +97,31 @@ def montar_clientes(df_municipios, df_lat_long, quantidade=50):
 
     return pd.DataFrame(clientes)
 
-
+#Adicao do cargo de cada funcionario
 def monta_funcionarios():
     """Quadro fixo de funcionários, cada um com uma área e data de contratação aleatória."""
 
     funcionarios = [
-        [2, 'Jim Halpert', 'Vendas'],
-        [1, 'Dwight Schrute', 'Vendas'],
-        [3, 'Stanley Hudson', 'Vendas'],
-        [4, 'Phyllis Vance', 'Vendas'],
-        [5, 'Andy Bernard', 'Vendas'],
-        [6, 'Ryan Howard', 'Vendas'],
-        [7, 'Michael Scott', 'Gerencia'],
-        [8, 'Pamela Halpert', 'Administrativo'],
-        [9, 'Angela Martin', 'Contabilidade'],
-        [10, 'Oscar Martinez', 'Contabilidade'],
-        [11, 'Kevin Malone', 'Contabilidade'],
-        [12, 'Kelly Kapoor', 'Administrativo'],
-        [13, 'Creed Bratton', 'Administrativo'],
-        [14, 'Meredith Palmer', 'Administrativo'],
-        [15, 'Darryl Philbin', 'Armazém'],
-        [16, 'Lonny Smith', 'Armazém'],
-        [17, 'Madge Parker', 'Armazém'],
-        [18, 'Glenn Godwin', 'Armazém'],
-        [19, 'Hide Lee', 'Armazém'],
-        [20, 'Toby Flenderson', 'Recursos Humanos'],
+        [1, 'Dwight Schrute', 'Vendas','Sênior'],
+		[2, 'Jim Halpert', 'Vendas','Sub-Gerente'],
+        [3, 'Stanley Hudson', 'Vendas','Sênior'],
+        [4, 'Phyllis Vance', 'Vendas','Pleno'],
+        [5, 'Andy Bernard', 'Vendas','Pleno'],
+        [6, 'Ryan Howard', 'Vendas','Junior'],
+        [7, 'Michael Scott', 'Administrativo','Gerente'],
+        [8, 'Pamela Halpert', 'Administrativo','Junior'],
+        [9, 'Angela Martin', 'Contabilidade','Sênior'],
+        [10, 'Oscar Martinez', 'Contabilidade','Sênior'],
+        [11, 'Kevin Malone', 'Contabilidade','Junior'],
+        [12, 'Kelly Kapoor', 'Administrativo','Pleno'],
+        [13, 'Creed Bratton', 'Administrativo','Pleno'],
+        [14, 'Meredith Palmer', 'Administrativo','Pleno'],
+        [15, 'Darryl Philbin', 'Armazém','Sênior'],
+        [16, 'Lonny Smith', 'Armazém','Pleno'],
+        [17, 'Madge Parker', 'Armazém','Pleno'],
+        [18, 'Glenn Godwin', 'Armazém','Junior'],
+        [19, 'Hide Lee', 'Armazém','Junior'],
+        [20, 'Toby Flenderson', 'Recursos Humanos','Sênior'],
     ]
 
     datas_possiveis = pd.date_range(
@@ -131,42 +131,38 @@ def monta_funcionarios():
 
     registros = []
 
-    for id_func, nome, area in funcionarios:
+    for id_func, nome, area,cargo in funcionarios:
         registros.append({
             'id': id_func,
             'Nome': nome,
             'Area': area,
+            'Cargo': cargo,
             'Data_Contratacao': random.choice(datas_possiveis),
         })
 
     return pd.DataFrame(registros)
 
 
-def montar_vendas(df_produtos, df_clientes, df_funcionarios, datas, n):
-    """
-    Gera `n` vendas sintéticas, sorteando produto, cliente, vendedor
-    (apenas funcionários da área "Vendas") e data.
-    """
 
-    # calculado uma única vez fora do loop, já que não muda a cada venda
-    vendedores = df_funcionarios[
-        df_funcionarios['Area'] == 'Vendas'
-    ]['id'].tolist()
+def monta_comissao():
+    df_funcionarios = monta_funcionarios()
 
-    vendas = []
-
-    for x in range(n):
-        produto = df_produtos.sample(n=1).iloc[0]
-        qtd = random.randint(1, 30)
-
-        vendas.append({
-            'id_venda': x + 1,
-            'data_venda': random.choice(datas),
-            'id_cliente': random.choice(df_clientes['id']),
-            'id_vendedor': random.choice(vendedores),
-            'produto_id': produto['id'],
-            'quantidade': qtd,
-            'valor_total': qtd * produto['valor_unitario'],
+    comissionamento = []
+    for y,x in df_funcionarios.iterrows():
+        if x['Cargo'] in (['Sênior','Gerente','Sub-Gerente']):
+            Comissao_minima = 0.15 
+            Comissao_maxima = 0.2
+        elif x['Cargo'] == 'Pleno':
+            Comissao_minima = 0.05
+            Comissao_maxima = 0.08
+        else:
+            Comissao_minima = 0.02 
+            Comissao_maxima = 0.05
+        
+        comissionamento.append({
+            'id_funcionario': x['id'],
+            'Comissao_minima': Comissao_minima,
+            'Comissao_maxima': Comissao_maxima
         })
 
-    return pd.DataFrame(vendas)
+    return pd.DataFrame(comissionamento)

@@ -1,0 +1,1 @@
+from src.vendas.vendas import montar_vendas
